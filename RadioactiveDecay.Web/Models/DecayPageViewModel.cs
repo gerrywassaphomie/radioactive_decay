@@ -23,6 +23,7 @@ public sealed class DecayPageViewModel : IValidatableObject
     [Required(ErrorMessage = "Введите шаг расчёта.")]
     public string Step { get; set; } = "1";
 
+    [Microsoft.AspNetCore.Mvc.ModelBinding.BindNever]
     public IReadOnlyList<DecayPoint> Points { get; set; } = Array.Empty<DecayPoint>();
 
     // Explicit parsing accepts either decimal separator, without ambiguous thousands separators.
