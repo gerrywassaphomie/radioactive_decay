@@ -1,0 +1,70 @@
+@model DecayPageViewModel
+@{
+    string Number(double value) => value.ToString("G6", CultureInfo.GetCultureInfo("ru-RU"));
+}
+<section class="intro">
+    <p class="eyebrow">Лабораторная работа № 8</p>
+    <h1>Радиоактивный распад</h1>
+    <p>Исследуйте, как меняется количество нераспавшихся ядер со временем.</p>
+    <div class="formula">N(t) = N₀ · e<sup>−λt</sup><span>λ = ln(2) / T½ · A(t) = λN(t)</span></div>
+</section>
+<div class="workspace">
+<section class="card parameters" aria-labelledby="parameters-title">
+    <p class="eyebrow">01 / Настройка</p><h2 id="parameters-title">Параметры опыта</h2>
+    <p class="muted">Все интервалы времени — в секундах. Дробные значения можно вводить через точку или запятую.</p>
+    <form asp-controller="Home" asp-action="Index" method="post">
+        <div asp-validation-summary="All" class="errors" role="alert"></div>
+        <label asp-for="InitialQuantity"></label>
+        <input asp-for="InitialQuantity" type="text" inputmode="decimal" aria-describedby="initial-error" />
+        <span asp-validation-for="InitialQuantity" id="initial-error"></span>
+        <label asp-for="HalfLife"></label>
+        <input asp-for="HalfLife" type="text" inputmode="decimal" aria-describedby="half-error" />
+        <span asp-validation-for="HalfLife" id="half-error"></span>
+        <label asp-for="Duration"></label>
+        <input asp-for="Duration" type="text" inputmode="decimal" aria-describedby="duration-error" />
+        <span asp-validation-for="Duration" id="duration-error"></span>
+        <label asp-for="Step"></label>
+        <input asp-for="Step" type="text" inputmode="decimal" aria-describedby="step-error" />
+        <span asp-validation-for="Step" id="step-error"></span>
+        <p class="muted small">До 2 000 точек за расчёт. Конечный момент включается независимо от шага.</p>
+        <button type="submit">Рассчитать распад <span aria-hidden="true">→</span></button>
+    </form>
+</section>
+<section class="card chart-card" aria-labelledby="chart-title">
+    <p class="eyebrow">02 / Наблюдение</p><h2 id="chart-title">Количество ядер во времени</h2>
+    @if (Model.Points.Count == 0)
+    {
+        <div class="empty"><span aria-hidden="true">↘</span><h3>Начните эксперимент</h3><p>Задайте параметры и нажмите «Рассчитать распад». Здесь появится график.</p></div>
+    }
+    else
+    {
+        var last = Model.Points[^1];
+        <div class="metrics">
+            <div><span>Осталось ядер</span><strong>@Number(last.RemainingQuantity)</strong></div>
+            <div><span>Активность, Бк</span><strong>@Number(last.Activity)</strong></div>
+            <div><span>Точек расчёта</span><strong>@Model.Points.Count</strong></div>
+        </div>
+        <svg id="decay-chart" viewBox="0 0 760 360" role="img" aria-label="График количества нераспавшихся ядер от времени"></svg>
+        <noscript><p>Для отображения графика включите JavaScript. Все результаты доступны в таблице ниже.</p></noscript>
+        <script id="decay-data" type="application/json">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Points))</script>
+        <p class="muted small">Аналитический расчёт Core. Плавная линия соединяет рассчитанные точки.</p>
+    }
+</section>
+</div>
+@if (Model.Points.Count > 0)
+{
+    <section class="card results" aria-labelledby="results-title">
+        <p class="eyebrow">03 / Данные</p><h2 id="results-title">Результаты расчёта</h2>
+        <p class="muted">N₀ = @Model.InitialQuantity ядер · T½ = @Model.HalfLife с · Время = @Model.Duration с · Шаг = @Model.Step с</p>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="Таблица результатов с прокруткой">
+            <table><caption class="visually-hidden">Рассчитанные значения распада</caption>
+                <thead><tr><th scope="col">Время, с</th><th scope="col">Осталось ядер</th><th scope="col">Активность, Бк</th></tr></thead>
+                <tbody>@foreach (var point in Model.Points)
+                {
+                    <tr><td>@Number(point.Time)</td><td>@Number(point.RemainingQuantity)</td><td>@Number(point.Activity)</td></tr>
+                }</tbody>
+            </table>
+        </div>
+    </section>
+}
+
