@@ -1,0 +1,34 @@
+name: .NET build and test
+
+on:
+  push:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-test:
+    name: Build and test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install .NET SDK required by the repository
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Show installed SDKs
+        run: dotnet --info
+      - name: Restore
+        run: dotnet restore RadioactiveDecay.sln
+      - name: Build
+        run: dotnet build RadioactiveDecay.sln --configuration Release --no-restore
+      - name: Test
+        run: dotnet test RadioactiveDecay.sln --configuration Release --no-build --logger "console;verbosity=normal"
